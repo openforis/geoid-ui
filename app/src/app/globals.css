@@ -1,0 +1,124 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --radius: 0.625rem;
+
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --surface-raised: #d0dae4;
+  --border: #627a8c;
+  --text-primary: #0f1923;
+  --text-muted: #2a3a48;
+  --accent-green: #1b5471;
+  --accent-green-dim: #153d52;
+  --accent-bright: #26769e;
+  --accent-blue: #1b5471;
+  --accent-blue-light: #26769e;
+  --btn-primary-bg: #1b5471;
+  --btn-primary-bg-hover: #26769e;
+  --btn-primary-text: #ffffff;
+  --text-dim: #3d5060;
+  --toast-bg: #d6e8f5;
+
+  --background: var(--bg);
+  --foreground: var(--text-primary);
+  --card: var(--surface);
+  --card-foreground: var(--text-primary);
+  --popover: var(--surface);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--btn-primary-bg);
+  --primary-foreground: #ffffff;
+  --secondary: var(--surface-raised);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--surface-raised);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--surface-raised);
+  --accent-foreground: var(--text-primary);
+  --destructive: #e05a5a;
+  --input: var(--border);
+  --ring: #26769e;
+}
+
+.dark {
+  --bg: #0e1112;
+  --surface: #161b1e;
+  --surface-raised: #1e2428;
+  --border: #2a3035;
+  --text-primary: #e8eaeb;
+  --text-muted: #9aa8b0;
+  --accent-green: #84c8ef;
+  --accent-green-dim: #5ea4e4;
+  --accent-bright: #84c8ef;
+  --accent-blue: #5ea4e4;
+  --accent-blue-light: #84c8ef;
+  --btn-primary-bg: #1b5471;
+  --btn-primary-bg-hover: #26769e;
+  --btn-primary-text: #ffffff;
+  --text-dim: #8fa3b0;
+  --toast-bg: #0d1820;
+
+  --destructive: #f87171;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
+  --color-text-primary: var(--text-primary);
+  --color-text-muted: var(--text-muted);
+  --color-text-dim: var(--text-dim);
+  --color-accent-green: var(--accent-green);
+  --color-accent-green-dim: var(--accent-green-dim);
+  --color-accent-bright: var(--accent-bright);
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-blue-light: var(--accent-blue-light);
+  --color-btn-primary: var(--btn-primary-bg);
+  --color-btn-primary-hover: var(--btn-primary-bg-hover);
+  --color-btn-primary-text: var(--btn-primary-text);
+  --color-toast-bg: var(--toast-bg);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --font-sans: var(--font-loaded), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+
+  h1 { font-weight: 800; letter-spacing: -0.04em; }
+  h2 { font-weight: 700; letter-spacing: -0.03em; }
+  h3 { font-weight: 600; letter-spacing: -0.02em; }
+  p  { font-weight: 450; }
+}

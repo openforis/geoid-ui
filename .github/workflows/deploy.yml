@@ -1,0 +1,89 @@
+name: Deploy to GKE
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to deploy to
+        required: true
+        default: development
+        type: choice
+        options:
+          - development
+          - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Read version
+        id: version
+        run: |
+          VERSION=$(tr -d '[:space:]' < .version)
+          [ -n "$VERSION" ] || { echo "Missing .version"; exit 1; }
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.WORKLOAD_ID_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ vars.GKE_CLUSTER }}
+          location: ${{ vars.GKE_LOCATION }}
+
+      - name: Verify image exists
+        run: |
+          REGISTRY="${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}"
+          VERSION="${{ steps.version.outputs.version }}"
+          IMAGE_REF="${REGISTRY}/geoid-ui:${VERSION}"
+          echo "Checking ${IMAGE_REF}"
+          gcloud artifacts docker images describe "${IMAGE_REF}" >/dev/null || {
+            echo "Image not found: ${IMAGE_REF}"
+            exit 1
+          }
+
+      - name: Deploy
+        env:
+          GKE_NAMESPACE: ${{ vars.GKE_NAMESPACE }}
+          ENVIRONMENT: ${{ github.event.inputs.environment }}
+          VERSION: ${{ steps.version.outputs.version }}
+          IMAGE_REGISTRY: ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}
+          ENV_SECRET: ${{ vars.ENV_SECRET }}
+          GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          GKE_LB_STATIC_IP_NAME: ${{ vars.GKE_LB_STATIC_IP_NAME }}
+          HOST_URL: ${{ vars.HOST_URL }}
+        run: |
+          set -euo pipefail
+          INGRESS_HOST="${HOST_URL#https://}"
+          INGRESS_HOST="${INGRESS_HOST#http://}"
+          INGRESS_HOST="${INGRESS_HOST%%/*}"
+          export INGRESS_HOST
+          export DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          VARS='$GKE_NAMESPACE $ENVIRONMENT $VERSION $IMAGE_REGISTRY $ENV_SECRET $GCP_SERVICE_ACCOUNT $GKE_LB_STATIC_IP_NAME $HOST_URL $INGRESS_HOST $DEPLOYED_AT'
+          OUT=/tmp/k8s
+          mkdir -p "$OUT"
+          for f in infra/k8s/[0-9]*.yaml; do
+            envsubst "$VARS" < "$f" > "$OUT/$(basename "$f")"
+          done
+
+          shopt -s nullglob
+          for tier in 00 03 08 09; do
+            for f in "$OUT/${tier}."*.yaml; do
+              grep -q '^apiVersion:' "$f" || continue
+              kubectl apply -f "$f"
+            done
+            if [ "$tier" = "03" ]; then
+              kubectl wait --for=condition=available deployment --all -n "$GKE_NAMESPACE" --timeout=300s
+            fi
+          done

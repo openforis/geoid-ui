@@ -1,0 +1,165 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump-type:
+        description: 'Which version segment to bump: major, minor, or patch'
+        required: false
+        default: 'patch'
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+      whats-new:
+        description: 'What''s New section content (bullet points, one per line)'
+        required: false
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_branch: ${{ steps.vars.outputs.release_branch }}
+      mode: ${{ steps.vars.outputs.mode }}
+    permissions:
+      contents: write
+      issues: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - id: vars
+        run: |
+          BRANCH="${{ github.ref_name || 'main' }}"
+
+          if [ "$BRANCH" = "main" ]; then
+            MODE="create"
+            VER=$(tr -d '[:space:]' < .version)
+            [ -n "$VER" ] || { echo "Missing .version" >&2; exit 1; }
+            TAG="v$VER"
+            RELEASE_BRANCH="release/$TAG"
+          elif echo "$BRANCH" | grep -q "^release/"; then
+            MODE="update"
+            TAG="${BRANCH#release/}"
+            VER="${TAG#v}"
+            RELEASE_BRANCH="$BRANCH"
+          else
+            echo "Unsupported branch $BRANCH" >&2
+            exit 1
+          fi
+
+          echo "MODE=$MODE" >> $GITHUB_ENV
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "VER=$VER" >> $GITHUB_ENV
+          echo "RELEASE_BRANCH=$RELEASE_BRANCH" >> $GITHUB_ENV
+          echo "release_branch=$RELEASE_BRANCH" >> $GITHUB_OUTPUT
+          echo "mode=$MODE" >> $GITHUB_OUTPUT
+
+      - name: Ensure release exists (update mode)
+        if: ${{ steps.vars.outputs.mode == 'update' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view "$TAG" >/dev/null
+
+      - name: Ensure release branch
+        if: ${{ steps.vars.outputs.mode == 'create' }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code origin "$RELEASE_BRANCH"; then
+            git fetch origin "$RELEASE_BRANCH"
+          else
+            git branch "$RELEASE_BRANCH" "$GITHUB_SHA"
+            git push origin "$RELEASE_BRANCH:$RELEASE_BRANCH"
+          fi
+
+      - name: Retag release branch head (update mode)
+        if: ${{ steps.vars.outputs.mode == 'update' }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin "$RELEASE_BRANCH" || { echo "Release branch $RELEASE_BRANCH not found" >&2; exit 1; }
+          git tag -d "$TAG" 2>/dev/null || true
+          git push origin ":refs/tags/$TAG" || true
+          git checkout "$RELEASE_BRANCH"
+          git tag -a "$TAG" -m "Update release $TAG"
+          git push origin "$TAG"
+
+      - id: notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          WHATS_NEW="${{ github.event.inputs.whats-new }}"
+
+          {
+            echo "## What's New"
+            echo
+            if [ -n "$WHATS_NEW" ]; then
+              echo "$WHATS_NEW"
+            fi
+            echo
+          } > RELEASE_NOTES.md
+
+          BODY=$(gh issue list --state closed --milestone "$TAG" \
+                  --repo "$GITHUB_REPOSITORY" \
+                  --json title,number \
+                  --jq '.[] | "- " + .title + " (#" + (.number|tostring) + ")"' || true)
+          if [ -z "$BODY" ]; then
+            BODY="No closed issues in this milestone."
+          fi
+          {
+            echo "---"
+            echo
+            echo "## Issues Resolved in This Release"
+            echo
+            echo "$BODY"
+          } >> RELEASE_NOTES.md
+          echo "NOTES_PATH=RELEASE_NOTES.md" >> $GITHUB_ENV
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ steps.vars.outputs.mode == 'create' }}
+        run: |
+          gh release create "$TAG" \
+            --title "Release $TAG" \
+            --notes-file "$NOTES_PATH" \
+            --target "$RELEASE_BRANCH"
+
+      - name: Update GitHub release notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ steps.vars.outputs.mode == 'update' }}
+        run: |
+          gh release edit "$TAG" \
+            --tag "$TAG" \
+            --notes-file "$NOTES_PATH" \
+            --draft=false \
+            --latest
+
+      - name: Bump .version (major/minor/patch)
+        if: ${{ steps.vars.outputs.mode == 'create' }}
+        run: |
+          BUMP_TYPE="${{ github.event.inputs.bump-type || 'patch' }}"
+          CURRENT=$(tr -d '[:space:]' < .version)
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          case "$BUMP_TYPE" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+            *) echo "Unknown bump type: $BUMP_TYPE" >&2; exit 1 ;;
+          esac
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          echo "$NEW_VERSION" > .version
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .version
+          git commit -m "chore: bump version to $NEW_VERSION [skip ci]"
+          git push origin HEAD:main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

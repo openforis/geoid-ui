@@ -1,0 +1,59 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+      - release/**
+    paths-ignore:
+      - '.github/**'
+      - 'infra/**'
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      branch:
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: development
+    permissions:
+      id-token: write
+      contents: read
+
+    env:
+      REF_TO_BUILD: ${{ github.event_name == 'workflow_call' && inputs.branch || github.ref_name }}
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ env.REF_TO_BUILD }}
+
+      - name: Extract version
+        id: package_version
+        run: |
+          VERSION=$(tr -d '[:space:]' < .version)
+          [ -n "$VERSION" ] || { echo "Missing .version"; exit 1; }
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.WORKLOAD_ID_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ vars.REGISTRY }}
+
+      - name: Build and push app image
+        run: |
+          docker build --build-arg VERSION=${{ steps.package_version.outputs.version }} -t ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/geoid-ui:${{ steps.package_version.outputs.version }} -f app/Dockerfile .
+          docker push ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/geoid-ui:${{ steps.package_version.outputs.version }}
+
+      - name: Clean up untagged images
+        run: |
+          gcloud artifacts docker images list ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/geoid-ui \
+            --include-tags --filter="-tags:*" \
+            --format="value[separator='@'](IMAGE,DIGEST)" | \
+            xargs -I {} gcloud artifacts docker images delete "{}" --quiet --async || true
