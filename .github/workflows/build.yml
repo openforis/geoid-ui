@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - release/**
     paths-ignore:
       - '.github/**'
       - 'infra/**'
@@ -18,7 +17,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: development
     permissions:
       id-token: write
       contents: read
