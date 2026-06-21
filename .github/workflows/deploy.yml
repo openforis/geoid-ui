@@ -78,7 +78,7 @@ jobs:
           done
 
           shopt -s nullglob
-          for tier in 00 03 08 09; do
+          for tier in 00 03; do
             for f in "$OUT/${tier}."*.yaml; do
               grep -q '^apiVersion:' "$f" || continue
               kubectl apply -f "$f"
@@ -86,4 +86,11 @@ jobs:
             if [ "$tier" = "03" ]; then
               kubectl wait --for=condition=available deployment --all -n "$GKE_NAMESPACE" --timeout=300s
             fi
+          done
+
+          bash infra/gcp/create-ingress-tls-secret.sh "$GKE_NAMESPACE" "$INGRESS_HOST"
+
+          for f in "$OUT/09."*.yaml; do
+            grep -q '^apiVersion:' "$f" || continue
+            kubectl apply -f "$f"
           done
