@@ -7,21 +7,13 @@ import type {
   GeoIdFeature,
   MintResponse,
 } from '@/lib/geoid/types'
+import { AppEnv } from '@/lib/server/env'
 
 const COLLECTIONS_REVALIDATE_SECONDS = 300
 
 export type GeoidClientConfig = {
   baseUrl: string
   adminToken?: string
-}
-
-export function geoidClientConfig(): GeoidClientConfig | null {
-  const baseUrl = process.env.GEOID_BASE_URL?.trim().replace(/\/$/, '')
-  if (!baseUrl) return null
-  return {
-    baseUrl,
-    adminToken: process.env.GEOID_ADMIN_TOKEN?.trim() || undefined,
-  }
 }
 
 async function readErrorMessage(res: Response): Promise<string> {
@@ -119,13 +111,8 @@ export class GeoidClient {
   }
 }
 
-export function getGeoidClient(): GeoidClient | null {
-  const config = geoidClientConfig()
-  return config ? new GeoidClient(config) : null
-}
-
-export function requireGeoidClient(): GeoidClient {
-  const client = getGeoidClient()
-  if (!client) throw new Error('GeoID is not configured. Set GEOID_BASE_URL.')
-  return client
+export async function requireGeoidClient(): Promise<GeoidClient> {
+  const { geoid } = await AppEnv.load()
+  if (!geoid.baseUrl) throw new Error('GeoID is not configured. Set GEOID_BASE_URL.')
+  return new GeoidClient({ baseUrl: geoid.baseUrl, adminToken: geoid.adminToken })
 }
