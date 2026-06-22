@@ -32,10 +32,10 @@ export function ConverterPanel({ className, maxFileSize }: { className?: string;
       {showTabs && (
         <TabsList className="w-full">
           <TabsTrigger value="geojson-to-geoid" className="flex-1">
-            GeoJson → GeoId
+            GeoJSON → GeoID
           </TabsTrigger>
           <TabsTrigger value="geoid-to-geojson" className="flex-1">
-            GeoId → GeoJson
+            GeoID → GeoJSON
           </TabsTrigger>
         </TabsList>
       )}

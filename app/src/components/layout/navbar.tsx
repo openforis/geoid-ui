@@ -17,7 +17,7 @@ export function Navbar() {
       <Link href="/" className="flex shrink-0 items-center no-underline">
         <Image
           src={theme === "dark" ? "/geoid_logo_nav_white.svg" : "/geoid_logo_nav.svg"}
-          alt="GeoId"
+          alt="GeoID"
           width={102}
           height={32}
           className="h-8 w-auto"

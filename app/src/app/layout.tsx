@@ -6,7 +6,7 @@ import { Footer } from "@/components/layout/footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "GeoId",
+  title: "GeoID",
   description: "Register geospatial features to mint stable GeoIDs, or resolve IDs back to GeoJSON.",
 };
 

@@ -8,7 +8,7 @@ export default function Home() {
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col min-h-0 gap-5">
       <div className="shrink-0 text-center">
         <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
-          GeoId
+          GeoID
         </h1>
         <p className="mx-auto mt-2 max-w-3xl text-sm leading-relaxed text-text-muted">
           Register GeoJSON features in a collection to mint stable GeoIDs—persistent identifiers
