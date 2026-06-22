@@ -5,8 +5,15 @@ import { requireGeoidClient } from '@/lib/geoid/client'
 import type { CollectionInfo } from '@/types/collection'
 
 export const fetchCollections = action(async (): Promise<CollectionInfo[]> => {
-  const client = await requireGeoidClient()
-  return client.listCollections()
+  // const client = await requireGeoidClient()
+  // return client.listCollections()
+  return [
+    {
+      id: 'public',
+      title: 'Public (anonymous contributions)',
+      description: null,
+    },
+  ]
 })
 
 export const registerGeojson = action(async (payload: {
