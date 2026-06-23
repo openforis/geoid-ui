@@ -23,20 +23,18 @@ function geoidFrom(overrides: EnvOverrides) {
   }
 }
 
+export function getSubmissionConfig() {
+  return {
+    maxRequestBodySizeKb: envInt('MAX_REQUEST_BODY_SIZE_KB', 1024),
+  }
+}
+
 export class AppEnv {
   static async load() {
     const overrides = Env.parse((await cookies()).get(Env.key)?.value)
     return {
       geoid: geoidFrom(overrides),
-      submission: {
-        maxRequestBodySizeKb: envInt('MAX_REQUEST_BODY_SIZE_KB', 1024),
-      },
+      submission: getSubmissionConfig(),
     }
   }
-}
-
-export const config = {
-  submission: {
-    maxRequestBodySizeKb: envInt('MAX_REQUEST_BODY_SIZE_KB', 1024),
-  },
 }

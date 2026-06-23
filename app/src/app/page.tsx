@@ -1,8 +1,10 @@
 import { ConverterPanel } from "@/components/converter/converter-panel";
-import { config } from "@/lib/server/env";
+import { getSubmissionConfig } from "@/lib/server/env";
+
+export const dynamic = "force-dynamic";
 
 export default function Home() {
-  const maxFileSize = config.submission.maxRequestBodySizeKb * 1024;
+  const maxFileSize = getSubmissionConfig().maxRequestBodySizeKb * 1024;
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col min-h-0 gap-5">
