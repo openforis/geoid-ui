@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { fetchDeployedBaseUrl } from "@/lib/env.actions";
 import { loadEnv, saveEnv } from "@/lib/env.client";
 
 const labelClass = "text-[11px] font-medium uppercase tracking-wider text-text-muted";
@@ -21,20 +22,41 @@ type EnvSettingsModalProps = {
 };
 
 export function EnvSettingsModal({ open, onOpenChange }: EnvSettingsModalProps) {
+  const [deployedBaseUrl, setDeployedBaseUrl] = useState<string | undefined>();
   const [baseUrl, setBaseUrl] = useState("");
   const [adminToken, setAdminToken] = useState("");
 
   useEffect(() => {
     if (!open) return;
-    const settings = loadEnv();
-    setBaseUrl(settings.baseUrl ?? "");
-    setAdminToken(settings.adminToken ?? "");
+
+    const override = loadEnv().baseUrl;
+    setAdminToken("");
+    setBaseUrl(override ?? "");
+
+    let cancelled = false;
+    void fetchDeployedBaseUrl().then((result) => {
+      if (cancelled || !result.ok) return;
+      setDeployedBaseUrl(result.data);
+      if (!override) setBaseUrl(result.data ?? "");
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [open]);
 
-  const apply = (next: { baseUrl: string; adminToken: string }) => {
+  const apply = (next: { baseUrl: string; adminToken?: string; clearToken?: boolean }) => {
+    const trimmedBaseUrl = next.baseUrl.trim();
+    const trimmedAdminToken = next.adminToken?.trim();
+    const existing = loadEnv();
     saveEnv({
-      baseUrl: next.baseUrl.trim() || undefined,
-      adminToken: next.adminToken.trim() || undefined,
+      baseUrl:
+        trimmedBaseUrl && trimmedBaseUrl !== deployedBaseUrl ? trimmedBaseUrl : undefined,
+      adminToken: next.clearToken
+        ? undefined
+        : trimmedAdminToken
+          ? trimmedAdminToken
+          : existing.adminToken,
     });
     onOpenChange(false);
     window.location.reload();
@@ -56,7 +78,7 @@ export function EnvSettingsModal({ open, onOpenChange }: EnvSettingsModalProps) 
               type="url"
               value={baseUrl}
               onChange={(e) => setBaseUrl(e.target.value)}
-              placeholder="https://data.review.fao.org/geoid"
+              placeholder={deployedBaseUrl}
             />
           </label>
           <label className="grid gap-1.5">
@@ -70,7 +92,11 @@ export function EnvSettingsModal({ open, onOpenChange }: EnvSettingsModalProps) 
           </label>
         </div>
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => apply({ baseUrl: "", adminToken: "" })}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => apply({ baseUrl: deployedBaseUrl ?? "", clearToken: true })}
+          >
             Reset
           </Button>
           <Button type="button" onClick={() => apply({ baseUrl, adminToken })}>
