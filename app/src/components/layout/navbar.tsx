@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Moon, Settings, Sun } from "lucide-react";
+import { useSession, signIn, signOut } from "next-auth/react";
+import { LogIn, LogOut, Moon, Settings, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/layout/theme-provider";
 import { EnvSettingsModal } from "@/components/layout/env-settings-modal";
@@ -11,6 +12,7 @@ import { EnvSettingsModal } from "@/components/layout/env-settings-modal";
 export function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const { data: session } = useSession();
 
   return (
     <nav className="sticky top-0 z-[250] flex h-14 items-center gap-4 border-b border-border bg-bg px-8">
@@ -45,6 +47,23 @@ export function Navbar() {
       <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
         {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
       </Button>
+
+      {session?.user ? (
+        <>
+          <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/my-geoids" />}>
+            My GeoIDs
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => signOut()} aria-label="Sign out">
+            <LogOut className="size-4" />
+            {session.user.name ?? session.user.email}
+          </Button>
+        </>
+      ) : (
+        <Button variant="ghost" size="sm" onClick={() => signIn("fao")} aria-label="Sign in">
+          <LogIn className="size-4" />
+          Sign in
+        </Button>
+      )}
 
       <EnvSettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </nav>

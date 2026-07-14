@@ -1,4 +1,5 @@
 import 'server-only'
+import { auth } from '@/auth'
 import { featuresFromGeojson } from '@/lib/geoid/geojson'
 import type {
   BulkReport,
@@ -6,6 +7,7 @@ import type {
   GeoIdCollection,
   GeoIdFeature,
   MintResponse,
+  PlaceRecord,
 } from '@/lib/geoid/types'
 import { AppEnv } from '@/lib/server/env'
 
@@ -14,6 +16,7 @@ const COLLECTIONS_REVALIDATE_SECONDS = 300
 export type GeoidClientConfig = {
   baseUrl: string
   adminToken?: string
+  userToken?: string
 }
 
 async function readErrorMessage(res: Response): Promise<string> {
@@ -105,14 +108,29 @@ export class GeoidClient {
     return { type: 'FeatureCollection', features }
   }
 
+  async listMyGeoids(params: { limit?: number; offset?: number } = {}): Promise<PlaceRecord[]> {
+    const query = new URLSearchParams()
+    if (params.limit) query.set('limit', String(params.limit))
+    if (params.offset) query.set('offset', String(params.offset))
+    const qs = query.toString()
+    const res = await fetch(`${this.config.baseUrl}/me/geoids${qs ? `?${qs}` : ''}`, {
+      cache: 'no-store',
+      headers: this.authHeaders({ Accept: 'application/json' }),
+    })
+    if (!res.ok) throw new Error(await readErrorMessage(res))
+    return (await res.json()) as PlaceRecord[]
+  }
+
   private authHeaders(headers: Record<string, string>): Record<string, string> {
-    if (!this.config.adminToken) return headers
-    return { ...headers, Authorization: `Bearer ${this.config.adminToken}` }
+    const token = this.config.userToken || this.config.adminToken
+    if (!token) return headers
+    return { ...headers, Authorization: `Bearer ${token}` }
   }
 }
 
 export async function requireGeoidClient(): Promise<GeoidClient> {
   const { geoid } = await AppEnv.load()
   if (!geoid.baseUrl) throw new Error('GeoID is not configured. Set GEOID_BASE_URL.')
-  return new GeoidClient({ baseUrl: geoid.baseUrl, adminToken: geoid.adminToken })
+  const session = await auth()
+  return new GeoidClient({ baseUrl: geoid.baseUrl, adminToken: geoid.adminToken, userToken: session?.accessToken })
 }

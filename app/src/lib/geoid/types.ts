@@ -40,3 +40,11 @@ export type BulkReport = {
 export type CollectionsResponse = {
   collections?: Array<{ id: string; title?: string; description?: string }>
 }
+
+export type PlaceRecord = {
+  geoid: string
+  uri: string
+  collection: string
+  external_id: string | null
+  created_at: string
+}
