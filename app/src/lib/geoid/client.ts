@@ -9,13 +9,11 @@ import type {
   MintResponse,
   PlaceRecord,
 } from '@/lib/geoid/types'
-import { AppEnv } from '@/lib/server/env'
 
 const COLLECTIONS_REVALIDATE_SECONDS = 300
 
 export type GeoidClientConfig = {
   baseUrl: string
-  adminToken?: string
   userToken?: string
 }
 
@@ -122,15 +120,14 @@ export class GeoidClient {
   }
 
   private authHeaders(headers: Record<string, string>): Record<string, string> {
-    const token = this.config.userToken || this.config.adminToken
-    if (!token) return headers
-    return { ...headers, Authorization: `Bearer ${token}` }
+    if (!this.config.userToken) return headers
+    return { ...headers, Authorization: `Bearer ${this.config.userToken}` }
   }
 }
 
 export async function requireGeoidClient(): Promise<GeoidClient> {
-  const { geoid } = await AppEnv.load()
-  if (!geoid.baseUrl) throw new Error('GeoID is not configured. Set GEOID_BASE_URL.')
+  const baseUrl = process.env.GEOID_BASE_URL?.trim().replace(/\/$/, '')
+  if (!baseUrl) throw new Error('GeoID is not configured. Set GEOID_BASE_URL.')
   const session = await auth()
-  return new GeoidClient({ baseUrl: geoid.baseUrl, adminToken: geoid.adminToken, userToken: session?.accessToken })
+  return new GeoidClient({ baseUrl, userToken: session?.accessToken })
 }
