@@ -4,14 +4,14 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
-import { LogOut, MapPin, Moon, Sun, User } from "lucide-react";
+import { LogOut, MapPin, Moon, Settings, Sun, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/layout/theme-provider";
 import { SignInButton } from "@/components/layout/sign-in-button";
 
 const ACCOUNT_LINKS = [{ icon: MapPin, href: "/my-geoids", label: "My GeoIDs" }];
 
-export function Navbar() {
+export function Navbar({ accountManagementUrl }: { accountManagementUrl?: string | null }) {
   const { theme, toggleTheme } = useTheme();
   const { data: session } = useSession();
   const [open, setOpen] = useState(false);
@@ -101,6 +101,20 @@ export function Navbar() {
                   {label}
                 </Link>
               ))}
+
+              {accountManagementUrl && (
+                <a
+                  href={accountManagementUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  role="menuitem"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-text-muted hover:bg-surface-raised hover:text-text-primary transition-colors"
+                >
+                  <Settings className="size-3.5" aria-hidden />
+                  Account
+                </a>
+              )}
 
               <button
                 role="menuitem"

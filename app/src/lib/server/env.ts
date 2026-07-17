@@ -12,3 +12,14 @@ export function getSubmissionConfig() {
     maxRequestBodySizeKb: envInt('MAX_REQUEST_BODY_SIZE_KB', 1024),
   }
 }
+
+export function getAccountManagementUrl(): string | null {
+  const issuer = process.env.KEYCLOAK_ISSUER
+  if (!issuer) return null
+
+  const base = issuer.endsWith('/') ? issuer.slice(0, -1) : issuer
+  const url = new URL(`${base}/account`)
+  if (process.env.KEYCLOAK_CLIENT_ID) url.searchParams.set('referrer', process.env.KEYCLOAK_CLIENT_ID)
+  if (process.env.HOST_URL) url.searchParams.set('referrer_uri', process.env.HOST_URL)
+  return url.toString()
+}
