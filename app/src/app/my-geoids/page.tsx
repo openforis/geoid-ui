@@ -1,3 +1,10 @@
+import { notFound } from "next/navigation";
+
+export default function MyGeoidsPage() {
+  notFound();
+}
+
+/*
 import { auth } from "@/auth";
 import { requireGeoidClient } from "@/lib/geoid/client";
 import type { PlaceRecord } from "@/lib/geoid/types";
@@ -134,3 +141,4 @@ async function MyGeoidsList({ offset }: { offset: number }) {
     </Card>
   );
 }
+*/

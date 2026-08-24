@@ -4,12 +4,15 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
-import { LogOut, MapPin, Moon, Settings, Sun, User } from "lucide-react";
+// import { LogOut, MapPin, Moon, Settings, Sun, User } from "lucide-react";
+import { LogOut, Moon, Settings, Sun, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/layout/theme-provider";
 import { SignInButton } from "@/components/layout/sign-in-button";
 
-const ACCOUNT_LINKS = [{ icon: MapPin, href: "/my-geoids", label: "My GeoIDs" }];
+const ACCOUNT_LINKS: { icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>; href: string; label: string }[] = [
+  // { icon: MapPin, href: "/my-geoids", label: "My GeoIDs" },
+];
 
 export function Navbar({ accountManagementUrl }: { accountManagementUrl?: string | null }) {
   const { theme, toggleTheme } = useTheme();
