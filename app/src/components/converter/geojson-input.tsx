@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { FileTextInput } from '@/components/converter/file-text-input'
-import { CollectionPicker } from '@/components/converter/collection-picker'
+// import { CollectionPicker } from '@/components/converter/collection-picker'
 import { ConverterActions } from '@/components/converter/converter-actions'
 import { ConverterProgress } from '@/components/converter/converter-progress'
 import { RegisterOutput } from '@/components/converter/register-output'
@@ -21,7 +21,8 @@ export function GeojsonInput({ onError, onStepChange, maxFileSize }: GeojsonInpu
   const { step, setStep, flowRef, resetStep } = useConverterFlow(onStepChange)
   const [fileName, setFileName] = useState('')
   const [text, setText] = useState('')
-  const [collection, setCollection] = useState('')
+  //const [collection, setCollection] = useState('')
+  const [collection] = useState('public')
   const [geoids, setGeoids] = useState<string[] | null>(null)
 
   const reset = () => {
@@ -101,7 +102,7 @@ export function GeojsonInput({ onError, onStepChange, maxFileSize }: GeojsonInpu
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <CollectionPicker value={collection} onChange={setCollection} onError={onError} />
+      {/* <CollectionPicker value={collection} onChange={setCollection} onError={onError} /> */}
       <FileTextInput
         accept=".json,.geojson"
         formats=".json · .geojson"
