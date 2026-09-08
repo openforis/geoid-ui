@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
-import { getAccountManagementUrl } from "@/lib/server/env";
+import { getAccountManagementUrl, getApiDocsUrl } from "@/lib/server/env";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
@@ -27,6 +27,7 @@ export default async function RootLayout({
 }>) {
   const session = await auth();
   const accountManagementUrl = getAccountManagementUrl();
+  const apiDocsUrl = getApiDocsUrl();
 
   return (
     <html lang="en" className={`h-full antialiased ${manrope.variable}`} suppressHydrationWarning>
@@ -40,7 +41,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col bg-bg text-text-primary transition-colors">
         <SessionProvider session={session}>
           <ThemeProvider>
-            <Navbar accountManagementUrl={accountManagementUrl} />
+            <Navbar accountManagementUrl={accountManagementUrl} apiDocsUrl={apiDocsUrl} />
             <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 py-8">
               {children}
             </main>

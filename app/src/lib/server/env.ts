@@ -13,6 +13,12 @@ export function getSubmissionConfig() {
   }
 }
 
+export function getApiDocsUrl(): string | null {
+  const baseUrl = process.env.GEOID_BASE_URL?.trim().replace(/\/$/, '')
+  if (!baseUrl) return null
+  return `${baseUrl}/docs`
+}
+
 export function getAccountManagementUrl(): string | null {
   const issuer = process.env.KEYCLOAK_ISSUER
   if (!issuer) return null
