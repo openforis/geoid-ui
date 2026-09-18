@@ -71,7 +71,7 @@ export function FileDropZone({
       ) : (
         <>
           <span className={cn('font-medium text-text-primary text-center', compact ? 'text-[13px]' : 'text-[14px]')}>
-            <span className="text-accent-green-dim font-semibold">Click to upload</span> or drag &amp; drop
+            <span className="text-accent-green-dim font-semibold">Click to upload</span>{' '}or drag &amp; drop
           </span>
           {formats && <span className="text-[12px] text-text-muted">{formats}</span>}
         </>
