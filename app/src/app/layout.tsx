@@ -45,7 +45,7 @@ export default async function RootLayout({
             <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 py-8">
               {children}
             </main>
-            <Footer />
+            <Footer apiDocsUrl={apiDocsUrl} />
           </ThemeProvider>
         </SessionProvider>
       </body>

@@ -4,7 +4,7 @@ import { Link } from "@/components/ui/link";
 
 const Sep = () => <span className="px-2 text-xs text-text-muted select-none">·</span>;
 
-export function Footer() {
+export function Footer({ apiDocsUrl }: { apiDocsUrl?: string | null }) {
   const version = process.env.NEXT_PUBLIC_APP_VERSION;
 
   return (
@@ -15,7 +15,14 @@ export function Footer() {
           Open Foris
         </Link>
       </span>
-      <Sep />
+      {apiDocsUrl && (
+        <>
+          <Sep />
+          <Link href={apiDocsUrl} variant="muted" target="_blank" rel="noopener noreferrer">
+            API docs
+          </Link>
+        </>
+      )}
       {version && (
         <>
           <div className="ml-auto">
