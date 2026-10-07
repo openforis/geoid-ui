@@ -23,6 +23,26 @@ export function Footer({ apiDocsUrl }: { apiDocsUrl?: string | null }) {
           </Link>
         </>
       )}
+      <Sep />
+      <Link
+        href="https://www.fao.org/contact-us/data-protection-and-privacy/en/"
+        variant="muted"
+        className="whitespace-nowrap"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Privacy Policy
+      </Link>
+      <Sep />
+      <Link
+        href="https://www.openforis.org/geoid-terms/"
+        variant="muted"
+        className="whitespace-nowrap"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Terms of Service
+      </Link>
       {version && (
         <>
           <div className="ml-auto">
