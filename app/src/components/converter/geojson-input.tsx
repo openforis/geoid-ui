@@ -7,17 +7,20 @@ import { ConverterActions } from '@/components/converter/converter-actions'
 import { ConverterProgress } from '@/components/converter/converter-progress'
 import { RegisterOutput } from '@/components/converter/register-output'
 import { useConverterFlow } from '@/components/converter/use-converter-flow'
+import { MapDrawInput } from '@/components/draw/map-draw-input'
 import { parseGeoJsonFile, parseGeoJsonText } from '@/lib/utils/file-parser'
 import { registerGeojson } from '@/lib/converter/actions'
 import type { ConverterStep } from '@/types/converter'
+import type { MapConfig } from '@/lib/server/env'
 
 interface GeojsonInputProps {
   onError: (message: string) => void
   onStepChange: (step: ConverterStep) => void
   maxFileSize: number
+  mapConfig: MapConfig
 }
 
-export function GeojsonInput({ onError, onStepChange, maxFileSize }: GeojsonInputProps) {
+export function GeojsonInput({ onError, onStepChange, maxFileSize, mapConfig }: GeojsonInputProps) {
   const { step, setStep, flowRef, resetStep } = useConverterFlow(onStepChange)
   const [fileName, setFileName] = useState('')
   const [text, setText] = useState('')
@@ -113,7 +116,9 @@ export function GeojsonInput({ onError, onStepChange, maxFileSize }: GeojsonInpu
         onFile={handleFile}
         maxFileSize={maxFileSize}
         onError={onError}
-      />
+      >
+        <MapDrawInput value={text} onChange={handleTextChange} mapConfig={mapConfig} />
+      </FileTextInput>
       <ConverterActions
         actionLabel="Register"
         disabled={!text.trim() || !collection}

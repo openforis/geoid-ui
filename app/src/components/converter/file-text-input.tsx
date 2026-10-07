@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { FileDropZone } from '@/components/converter/file-drop-zone'
 import { Textarea } from '@/components/ui/textarea'
 
@@ -13,6 +14,7 @@ interface FileTextInputProps {
   onFile: (file: File) => void
   maxFileSize: number
   onError: (message: string) => void
+  children?: ReactNode
 }
 
 export function FileTextInput({
@@ -25,6 +27,7 @@ export function FileTextInput({
   onFile,
   maxFileSize,
   onError,
+  children,
 }: FileTextInputProps) {
   const handleFile = (file: File) => {
     if (file.size > maxFileSize) {
@@ -36,14 +39,16 @@ export function FileTextInput({
 
   return (
     <div className="flex min-h-0 flex-1 items-stretch gap-0 max-sm:flex-col max-sm:min-h-64">
-      <FileDropZone
-        accept={accept}
-        fileName={fileName}
-        onFile={handleFile}
-        formats={formats}
-        compact
-        className="min-h-0"
-      />
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
+        <FileDropZone
+          accept={accept}
+          fileName={fileName}
+          onFile={handleFile}
+          formats={formats}
+          className="min-h-0"
+        />
+        {children}
+      </div>
 
       <div className="flex-shrink-0 w-8 flex items-center justify-center text-[11px] text-text-muted max-sm:w-full max-sm:py-1.5 max-sm:justify-center">
         or

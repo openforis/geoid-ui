@@ -13,6 +13,15 @@ export function getSubmissionConfig() {
   }
 }
 
+export function getMapConfig() {
+  return {
+    maxFeatures: envInt('MAX_MAP_FEATURES', 100),
+    cartoKey: process.env.CARTO_BASEMAP_KEY?.trim() || undefined,
+  }
+}
+
+export type MapConfig = ReturnType<typeof getMapConfig>
+
 export function getApiDocsUrl(): string | null {
   const baseUrl = process.env.GEOID_BASE_URL?.trim().replace(/\/$/, '')
   if (!baseUrl) return null

@@ -1,5 +1,5 @@
 import { ConverterPanel } from "@/components/converter/converter-panel";
-import { getSubmissionConfig } from "@/lib/server/env";
+import { getMapConfig, getSubmissionConfig } from "@/lib/server/env";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,7 @@ export default function Home() {
           applications without passing full shapes.
         </p>
       </div>
-      <ConverterPanel className="min-h-0 flex-1" maxFileSize={maxFileSize} />
+      <ConverterPanel className="min-h-0 flex-1" maxFileSize={maxFileSize} mapConfig={getMapConfig()} />
     </div>
   );
 }

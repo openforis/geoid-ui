@@ -12,8 +12,15 @@ import { Alert } from '@/components/ui/alert'
 import { GeojsonInput } from '@/components/converter/geojson-input'
 import { GeoidInput } from '@/components/converter/geoid-input'
 import type { ConverterStep } from '@/types/converter'
+import type { MapConfig } from '@/lib/server/env'
 
-export function ConverterPanel({ className, maxFileSize }: { className?: string; maxFileSize: number }) {
+interface ConverterPanelProps {
+  className?: string
+  maxFileSize: number
+  mapConfig: MapConfig
+}
+
+export function ConverterPanel({ className, maxFileSize, mapConfig }: ConverterPanelProps) {
   const [error, setError] = useState('')
   const [tab, setTab] = useState('geojson-to-geoid')
   const [geojsonStep, setGeojsonStep] = useState<ConverterStep>('input')
@@ -50,7 +57,12 @@ export function ConverterPanel({ className, maxFileSize }: { className?: string;
       )}
 
       <TabsContent value="geojson-to-geoid" className={cn('min-h-0 flex flex-col', showTabs ? 'mt-4' : undefined)}>
-        <GeojsonInput onError={setError} onStepChange={setGeojsonStep} maxFileSize={maxFileSize} />
+        <GeojsonInput
+          onError={setError}
+          onStepChange={setGeojsonStep}
+          maxFileSize={maxFileSize}
+          mapConfig={mapConfig}
+        />
       </TabsContent>
 
       <TabsContent value="geoid-to-geojson" className={cn('min-h-0 flex flex-col', showTabs ? 'mt-4' : undefined)}>
