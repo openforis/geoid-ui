@@ -7,6 +7,7 @@ if (!process.env.AUTH_URL && process.env.HOST_URL) {
   process.env.AUTH_URL = process.env.HOST_URL
 }
 
+const ssoEnabled = Boolean(process.env.KEYCLOAK_ISSUER)
 const clientSecret = process.env.KEYCLOAK_CLIENT_SECRET || undefined
 
 const keycloak: Provider = {
@@ -22,7 +23,8 @@ const keycloak: Provider = {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [keycloak],
+  providers: ssoEnabled ? [keycloak] : [],
+  secret: ssoEnabled ? undefined : crypto.randomUUID(),
   trustHost: true,
   callbacks: {
     jwt({ token, account }) {

@@ -83,5 +83,6 @@ export function toGeoJson(features: SourceFeature[], shapes: Shape[]): string {
     return shape ? [toFeature(shape)] : []
   })
   const drawn = shapes.filter((shape) => !shape.source).map(toFeature)
-  return JSON.stringify({ type: 'FeatureCollection', features: [...kept, ...drawn] }, null, 2)
+  const output = [...kept, ...drawn]
+  return output.length > 0 ? JSON.stringify({ type: 'FeatureCollection', features: output }, null, 2) : ''
 }

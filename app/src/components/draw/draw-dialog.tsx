@@ -85,7 +85,7 @@ export function DrawDialog({ features, cartoKey, onConfirm, onClose }: DrawDialo
 
   const vertices = active?.vertices ?? []
   const issue = shapeIssue(vertices)
-  const canUse = canUndo && !issue && shapes.length + locked.length > 0
+  const canUse = canUndo && !issue
 
   return (
     <Dialog open onOpenChange={(nextOpen) => { if (!nextOpen) requestClose() }}>

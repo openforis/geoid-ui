@@ -1,14 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { FileTextInput } from '@/components/converter/file-text-input'
 // import { CollectionPicker } from '@/components/converter/collection-picker'
 import { ConverterActions } from '@/components/converter/converter-actions'
 import { ConverterProgress } from '@/components/converter/converter-progress'
+import { FileTextInput } from '@/components/converter/file-text-input'
 import { RegisterOutput } from '@/components/converter/register-output'
 import { useConverterFlow } from '@/components/converter/use-converter-flow'
 import { MapDrawInput } from '@/components/draw/map-draw-input'
-import { parseGeoJsonFile, parseGeoJsonText } from '@/lib/utils/file-parser'
+import { parseGeoJsonText, readGeoJsonFile } from '@/lib/utils/file-parser'
 import { registerGeojson } from '@/lib/converter/actions'
 import type { ConverterStep } from '@/types/converter'
 import type { MapConfig } from '@/lib/server/env'
@@ -22,7 +22,6 @@ interface GeojsonInputProps {
 
 export function GeojsonInput({ onError, onStepChange, maxFileSize, mapConfig }: GeojsonInputProps) {
   const { step, setStep, flowRef, resetStep } = useConverterFlow(onStepChange)
-  const [fileName, setFileName] = useState('')
   const [text, setText] = useState('')
   //const [collection, setCollection] = useState('')
   const [collection] = useState('public')
@@ -30,7 +29,6 @@ export function GeojsonInput({ onError, onStepChange, maxFileSize, mapConfig }: 
 
   const reset = () => {
     resetStep()
-    setFileName('')
     setText('')
     setGeoids(null)
     onError('')
@@ -38,24 +36,8 @@ export function GeojsonInput({ onError, onStepChange, maxFileSize, mapConfig }: 
 
   const handleTextChange = (value: string) => {
     setText(value)
-    setFileName('')
     setGeoids(null)
     setStep('input')
-  }
-
-  const handleFile = async (file: File) => {
-    onError('')
-    setGeoids(null)
-    setStep('input')
-    const result = await parseGeoJsonFile(file)
-    if ('error' in result) {
-      onError(result.error)
-      setFileName('')
-      setText('')
-      return
-    }
-    setFileName(file.name)
-    setText(JSON.stringify(result.geojson, null, 2))
   }
 
   const handleRegister = async () => {
@@ -112,8 +94,7 @@ export function GeojsonInput({ onError, onStepChange, maxFileSize, mapConfig }: 
         placeholder={'Paste GeoJSON\n\n{\n  "type": "FeatureCollection",\n  "features": []\n}'}
         value={text}
         onChange={handleTextChange}
-        fileName={fileName}
-        onFile={handleFile}
+        readFile={readGeoJsonFile}
         maxFileSize={maxFileSize}
         onError={onError}
       >

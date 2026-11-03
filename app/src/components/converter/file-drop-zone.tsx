@@ -10,11 +10,10 @@ interface FileDropZoneProps {
   fileName?: string
   onFile: (file: File) => void
   formats?: string
-  disabled?: boolean
   className?: string
 }
 
-export function FileDropZone({ accept, fileName, onFile, formats, disabled, className }: FileDropZoneProps) {
+export function FileDropZone({ accept, fileName, onFile, formats, className }: FileDropZoneProps) {
   const [isDrag, setIsDrag] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -34,8 +33,7 @@ export function FileDropZone({ accept, fileName, onFile, formats, disabled, clas
         type="file"
         accept={accept}
         className="hidden"
-        disabled={disabled}
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f) }}
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = '' }}
       />
       <ZoneContent
         icon={UploadCloud}

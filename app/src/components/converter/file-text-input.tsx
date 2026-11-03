@@ -1,8 +1,9 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { FileDropZone } from '@/components/converter/file-drop-zone'
 import { Textarea } from '@/components/ui/textarea'
+import type { FileTextResult } from '@/lib/utils/file-parser'
 
 interface FileTextInputProps {
   accept: string
@@ -10,8 +11,7 @@ interface FileTextInputProps {
   placeholder: string
   value: string
   onChange: (value: string) => void
-  fileName: string
-  onFile: (file: File) => void
+  readFile: (file: File) => Promise<FileTextResult>
   maxFileSize: number
   onError: (message: string) => void
   children?: ReactNode
@@ -23,18 +23,26 @@ export function FileTextInput({
   placeholder,
   value,
   onChange,
-  fileName,
-  onFile,
+  readFile,
   maxFileSize,
   onError,
   children,
 }: FileTextInputProps) {
-  const handleFile = (file: File) => {
+  const [loaded, setLoaded] = useState<{ name: string; text: string } | null>(null)
+
+  const handleFile = async (file: File) => {
+    onError('')
     if (file.size > maxFileSize) {
       onError(`File too large. Maximum is ${maxFileSize / 1024} KB.`)
       return
     }
-    onFile(file)
+    const result = await readFile(file)
+    if (typeof result !== 'string') {
+      onError(result.error)
+      return
+    }
+    setLoaded({ name: file.name, text: result })
+    onChange(result)
   }
 
   return (
@@ -42,7 +50,7 @@ export function FileTextInput({
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <FileDropZone
           accept={accept}
-          fileName={fileName}
+          fileName={loaded?.text === value ? loaded.name : undefined}
           onFile={handleFile}
           formats={formats}
           className="min-h-0"

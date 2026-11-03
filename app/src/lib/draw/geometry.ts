@@ -38,7 +38,7 @@ function segmentsCross(a1: LatLng, a2: LatLng, b1: LatLng, b2: LatLng): boolean 
   const d2 = cross(a1, a2, b2)
   const d3 = cross(b1, b2, a1)
   const d4 = cross(b1, b2, a2)
-  return ((d1 > 0) !== (d2 > 0)) && ((d3 > 0) !== (d4 > 0))
+  return d1 * d2 < 0 && d3 * d4 < 0
 }
 
 function selfIntersects(ring: LatLng[]): boolean {
@@ -77,7 +77,10 @@ export function polygonsOf(geometry: Geometry | null): Position[][][] {
   return []
 }
 
-const toPosition = ({ lat, lng }: LatLng): Position => [round6(lng), round6(lat)]
+// Leaflet reports longitudes beyond ±180 when the map is panned onto a repeated world copy.
+const wrapLng = (lng: number) => ((((lng + 180) % 360) + 360) % 360) - 180
+
+const toPosition = ({ lat, lng }: LatLng): Position => [round6(wrapLng(lng)), round6(lat)]
 
 const toLatLng = ([lng, lat]: Position): LatLng => ({ lat, lng })
 

@@ -168,13 +168,13 @@ function LockedFeatures({ features }: { features: SourceFeature[] }) {
       .map((layer) => ({ ...layer, center: layer.bounds.getCenter() }))
   )
 
-  return layers.map(({ feature, bounds, center }, index) => {
-    return isTiny(bounds) ? (
+  return layers.map(({ feature, bounds, center }, index) =>
+    isTiny(bounds) ? (
       <CircleMarker key={index} center={center} radius={DOT_RADIUS} pathOptions={LOCKED_DOT} interactive={false} />
     ) : (
       <GeoJSON key={index} data={feature} style={LOCKED} interactive={false} pointToLayer={lockedPoint} />
     )
-  })
+  )
 }
 
 interface DrawMapProps {

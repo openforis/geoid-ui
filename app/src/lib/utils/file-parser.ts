@@ -2,7 +2,9 @@ export type GeoJsonParseResult =
   | { geojson: Record<string, unknown> }
   | { error: string }
 
-function readTextFile(file: File): Promise<string | { error: string }> {
+export type FileTextResult = string | { error: string }
+
+function readTextFile(file: File): Promise<FileTextResult> {
   return new Promise((resolve) => {
     const reader = new FileReader()
     reader.onload = (e) => {
@@ -24,21 +26,20 @@ export function parseGeoJsonText(text: string): GeoJsonParseResult {
   }
 }
 
-export async function parseGeoJsonFile(file: File): Promise<GeoJsonParseResult> {
+export async function readGeoJsonFile(file: File): Promise<FileTextResult> {
   const text = await readTextFile(file)
   if (typeof text !== 'string') return text
-  if (!text.trim()) return { error: 'File is empty.' }
-  return parseGeoJsonText(text)
+  const result = parseGeoJsonText(text)
+  return 'error' in result ? result : JSON.stringify(result.geojson, null, 2)
 }
 
 export function parseGeoIdText(text: string): string[] {
   return text.split(/[\n,]/).map((l) => l.trim()).filter(Boolean)
 }
 
-export async function parseGeoIdFile(file: File): Promise<string[] | { error: string }> {
+export async function readGeoIdFile(file: File): Promise<FileTextResult> {
   const text = await readTextFile(file)
   if (typeof text !== 'string') return text
   const ids = parseGeoIdText(text)
-  if (ids.length === 0) return { error: 'File contains no valid Geo IDs.' }
-  return ids
+  return ids.length > 0 ? ids.join('\n') : { error: 'File contains no valid Geo IDs.' }
 }

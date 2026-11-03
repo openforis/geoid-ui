@@ -6,7 +6,7 @@ import { ConverterActions } from '@/components/converter/converter-actions'
 import { ConverterProgress } from '@/components/converter/converter-progress'
 import { RetrieveOutput } from '@/components/converter/retrieve-output'
 import { useConverterFlow } from '@/components/converter/use-converter-flow'
-import { parseGeoIdFile, parseGeoIdText } from '@/lib/utils/file-parser'
+import { parseGeoIdText, readGeoIdFile } from '@/lib/utils/file-parser'
 import { retrieveGeojson } from '@/lib/converter/actions'
 import type { ConverterStep } from '@/types/converter'
 
@@ -18,7 +18,6 @@ interface GeoidInputProps {
 
 export function GeoidInput({ onError, onStepChange, maxFileSize }: GeoidInputProps) {
   const { step, setStep, flowRef, resetStep } = useConverterFlow(onStepChange)
-  const [fileName, setFileName] = useState('')
   const [text, setText] = useState('')
   const [geojson, setGeojson] = useState<Record<string, unknown> | null>(null)
 
@@ -26,7 +25,6 @@ export function GeoidInput({ onError, onStepChange, maxFileSize }: GeoidInputPro
 
   const reset = () => {
     resetStep()
-    setFileName('')
     setText('')
     setGeojson(null)
     onError('')
@@ -34,23 +32,8 @@ export function GeoidInput({ onError, onStepChange, maxFileSize }: GeoidInputPro
 
   const handleTextChange = (value: string) => {
     setText(value)
-    setFileName('')
     setGeojson(null)
     setStep('input')
-  }
-
-  const handleFile = async (file: File) => {
-    onError('')
-    setGeojson(null)
-    setStep('input')
-    const result = await parseGeoIdFile(file)
-    if ('error' in result) {
-      onError(result.error)
-      setFileName('')
-      return
-    }
-    setFileName(file.name)
-    setText(result.join('\n'))
   }
 
   const handleRetrieve = async () => {
@@ -102,8 +85,7 @@ export function GeoidInput({ onError, onStepChange, maxFileSize }: GeoidInputPro
         placeholder={"Paste Geo IDs\none per line\n\ne.g. 20230001\n     20230002"}
         value={text}
         onChange={handleTextChange}
-        fileName={fileName}
-        onFile={handleFile}
+        readFile={readGeoIdFile}
         maxFileSize={maxFileSize}
         onError={onError}
       />
