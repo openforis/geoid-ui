@@ -1,0 +1,14 @@
+# The deploy workflow passes each value through toJSON, so it arrives quoted and stays valid YAML.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: geoid-config
+  namespace: ${GKE_NAMESPACE}
+data:
+  GEOID_BASE_URL: ${APP_GEOID_BASE_URL}
+  MAX_REQUEST_BODY_SIZE_KB: ${APP_MAX_REQUEST_BODY_SIZE_KB}
+  MAX_MAP_FEATURES: ${APP_MAX_MAP_FEATURES}
+  CARTO_BASEMAP_KEY: ${APP_CARTO_BASEMAP_KEY}
+  KEYCLOAK_ISSUER: ${APP_KEYCLOAK_ISSUER}
+  KEYCLOAK_CLIENT_ID: ${APP_KEYCLOAK_CLIENT_ID}
+  KEYCLOAK_SCOPE: ${APP_KEYCLOAK_SCOPE}

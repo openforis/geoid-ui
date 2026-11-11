@@ -19,15 +19,11 @@ export const fetchCollections = action(async (): Promise<CollectionInfo[]> => {
 
 const GEOID = /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i
 
-export const registerGeojson = action(async (payload: {
-  collection: string
-  geojson: Record<string, unknown>
-}): Promise<ConverterResult> => {
-  if (!payload.collection?.trim()) throw new Error('Collection is required.')
+export const registerGeojson = action(async (payload: { geojson: Record<string, unknown> }): Promise<ConverterResult> => {
   if (!payload.geojson || typeof payload.geojson !== 'object') throw new Error('GeoJSON is required.')
 
   const client = await requireGeoidClient()
-  const { features, rejected } = await client.registerGeojson(payload.collection, payload.geojson)
+  const { features, rejected } = await client.registerGeojson(payload.geojson)
   return {
     geojson: { type: 'FeatureCollection', features },
     failed: rejected.map(({ index, reason, detail }) => ({ id: `Feature ${index + 1}`, reason: detail ?? reason })),

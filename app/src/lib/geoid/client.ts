@@ -50,16 +50,13 @@ export class GeoidClient {
     }))
   }
 
-  async registerBulk(collectionId: string, featureCollection: Record<string, unknown>): Promise<BulkReport> {
-    const res = await fetch(
-      `${this.config.baseUrl}/collections/${encodeURIComponent(collectionId)}/items/bulk`,
-      {
-        method: 'POST',
-        cache: 'no-store',
-        headers: this.authHeaders({ 'Content-Type': 'application/json', Accept: 'application/json' }),
-        body: JSON.stringify(featureCollection),
-      },
-    )
+  async registerBulk(featureCollection: Record<string, unknown>): Promise<BulkReport> {
+    const res = await fetch(`${this.config.baseUrl}/items/bulk`, {
+      method: 'POST',
+      cache: 'no-store',
+      headers: this.authHeaders({ 'Content-Type': 'application/json', Accept: 'application/json' }),
+      body: JSON.stringify(featureCollection),
+    })
     if (!res.ok) throw new Error(await readErrorMessage(res))
     return (await res.json()) as BulkReport
   }
@@ -75,12 +72,9 @@ export class GeoidClient {
     return (await res.json()) as ResolveResponse
   }
 
-  async registerGeojson(
-    collectionId: string,
-    geojson: Record<string, unknown>,
-  ): Promise<{ features: Feature[]; rejected: BulkRejected[] }> {
+  async registerGeojson(geojson: Record<string, unknown>): Promise<{ features: Feature[]; rejected: BulkRejected[] }> {
     const features = featuresFromGeojson(geojson)
-    const { accepted = [], rejected = [] } = await this.registerBulk(collectionId, { type: 'FeatureCollection', features })
+    const { accepted = [], rejected = [] } = await this.registerBulk({ type: 'FeatureCollection', features })
     if (accepted.length === 0) {
       throw new Error(rejected[0]?.detail ?? rejected[0]?.reason ?? 'No features were registered.')
     }

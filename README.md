@@ -27,6 +27,8 @@ Set in `app/.env.local`:
 | `CARTO_BASEMAP_KEY` | CARTO basemap key (optional) |
 | `AUTH_SECRET`, `KEYCLOAK_*` | Keycloak sign-in, off until `KEYCLOAK_ISSUER` is set |
 
+Deploys read the same settings from the GitHub environment, prefixed with `APP_`: `APP_AUTH_SECRET` and `APP_KEYCLOAK_CLIENT_SECRET` as secrets, the rest as variables.
+
 ## Releases
 
 The version lives in `.version`. Running **Create Release** on `main` tags `vX.Y.Z`, creates the `release/vX.Y.Z` branch and bumps `.version`. **Build** pushes an image tagged with the version for `main` and release branches, and **Deploy** rolls it out to an environment.

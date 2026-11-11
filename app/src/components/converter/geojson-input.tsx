@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 // import { CollectionPicker } from '@/components/converter/collection-picker'
 import { ConverterActions } from '@/components/converter/converter-actions'
 import { ConverterProgress } from '@/components/converter/converter-progress'
@@ -24,12 +23,11 @@ interface GeojsonInputProps {
 export function GeojsonInput({ onError, onStepChange, maxFileSize, mapConfig }: GeojsonInputProps) {
   const { step, text, output, flowRef, changeText, reset, run } = useConverterFlow(onStepChange, onError)
   //const [collection, setCollection] = useState('')
-  const [collection] = useState('public')
 
   const handleRegister = () => {
     const parsed = parseGeoJsonText(text)
     if ('error' in parsed) return onError(parsed.error)
-    run(() => registerGeojson({ collection, geojson: parsed.geojson }))
+    run(() => registerGeojson({ geojson: parsed.geojson }))
   }
 
   if (step === 'processing') {
@@ -80,7 +78,7 @@ export function GeojsonInput({ onError, onStepChange, maxFileSize, mapConfig }: 
       </FileTextInput>
       <ConverterActions
         actionLabel="Register"
-        disabled={!text.trim() || !collection}
+        disabled={!text.trim()}
         onAction={handleRegister}
         onClear={reset}
       />

@@ -59,10 +59,18 @@ jobs:
           ENVIRONMENT: ${{ github.event.inputs.environment }}
           VERSION: ${{ steps.version.outputs.version }}
           IMAGE_REGISTRY: ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}
-          ENV_SECRET: ${{ vars.ENV_SECRET }}
           GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
           GKE_LB_STATIC_IP_NAME: ${{ vars.GKE_LB_STATIC_IP_NAME }}
           HOST_URL: ${{ vars.HOST_URL }}
+          APP_GEOID_BASE_URL: ${{ toJSON(vars.APP_GEOID_BASE_URL) }}
+          APP_MAX_REQUEST_BODY_SIZE_KB: ${{ toJSON(vars.APP_MAX_REQUEST_BODY_SIZE_KB) }}
+          APP_MAX_MAP_FEATURES: ${{ toJSON(vars.APP_MAX_MAP_FEATURES) }}
+          APP_CARTO_BASEMAP_KEY: ${{ toJSON(vars.APP_CARTO_BASEMAP_KEY) }}
+          APP_KEYCLOAK_ISSUER: ${{ toJSON(vars.APP_KEYCLOAK_ISSUER) }}
+          APP_KEYCLOAK_CLIENT_ID: ${{ toJSON(vars.APP_KEYCLOAK_CLIENT_ID) }}
+          APP_KEYCLOAK_SCOPE: ${{ toJSON(vars.APP_KEYCLOAK_SCOPE) }}
+          APP_AUTH_SECRET: ${{ secrets.APP_AUTH_SECRET }}
+          APP_KEYCLOAK_CLIENT_SECRET: ${{ secrets.APP_KEYCLOAK_CLIENT_SECRET }}
         run: |
           set -euo pipefail
           INGRESS_HOST="${HOST_URL#https://}"
@@ -70,7 +78,13 @@ jobs:
           INGRESS_HOST="${INGRESS_HOST%%/*}"
           export INGRESS_HOST
           export DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          VARS='$GKE_NAMESPACE $ENVIRONMENT $VERSION $IMAGE_REGISTRY $ENV_SECRET $GCP_SERVICE_ACCOUNT $GKE_LB_STATIC_IP_NAME $HOST_URL $INGRESS_HOST $DEPLOYED_AT'
+          # Secrets are base64-encoded for the Secret's data field. Quoting them with toJSON instead
+          # would change their text, and GitHub would no longer mask them in this log.
+          for name in $(grep -o 'APP_[A-Z0-9_]*' infra/k8s/00.05-app-secrets.yaml | sort -u); do
+            export "$name=$(printf '%s' "${!name}" | base64 -w0)"
+          done
+          VARS='$GKE_NAMESPACE $ENVIRONMENT $VERSION $IMAGE_REGISTRY $GCP_SERVICE_ACCOUNT $GKE_LB_STATIC_IP_NAME $HOST_URL $INGRESS_HOST $DEPLOYED_AT'
+          VARS="$VARS $(grep -oh '\${APP_[A-Z0-9_]*}' infra/k8s/*.yaml | sort -u | tr '\n' ' ')"
           OUT=/tmp/k8s
           mkdir -p "$OUT"
           for f in infra/k8s/[0-9]*.yaml; do
