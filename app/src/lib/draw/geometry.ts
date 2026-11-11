@@ -90,6 +90,15 @@ export function toLatLngs(geometry: EditableGeometry): LatLng[] {
   return exterior.slice(0, -1).map(toLatLng)
 }
 
+export function areaHa(geometry: Geometry | null): number {
+  let area = 0
+  for (const [exterior, ...holes] of polygonsOf(geometry)) {
+    area += ringAreaHa(exterior.map(toLatLng))
+    for (const hole of holes) area -= ringAreaHa(hole.map(toLatLng))
+  }
+  return area
+}
+
 export function toGeometry(vertices: LatLng[], type?: EditableGeometry['type']): EditableGeometry {
   if (vertices.length === 1) return { type: 'Point', coordinates: toPosition(vertices[0]) }
 

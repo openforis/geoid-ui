@@ -1,13 +1,14 @@
 import 'server-only'
+import type { Feature } from 'geojson'
 import { auth } from '@/auth'
 import { featuresFromGeojson } from '@/lib/geoid/geojson'
 import type {
+  BulkRejected,
   BulkReport,
   CollectionsResponse,
   GeoIdCollection,
-  GeoIdFeature,
-  MintResponse,
   PlaceRecord,
+  ResolveResponse,
 } from '@/lib/geoid/types'
 
 const COLLECTIONS_REVALIDATE_SECONDS = 300
@@ -17,10 +18,11 @@ export type GeoidClientConfig = {
   userToken?: string
 }
 
-async function readErrorMessage(res: Response): Promise<string> {
+async function readErrorMessage(res: Response): Promise<string | undefined> {
   try {
     const data = (await res.json()) as { message?: string; detail?: unknown }
     if (data.message) return data.message
+    if (typeof data.detail === 'string') return data.detail
     if (Array.isArray(data.detail)) {
       return data.detail
         .map((item) => (typeof item === 'object' && item && 'msg' in item ? String(item.msg) : String(item)))
@@ -29,7 +31,6 @@ async function readErrorMessage(res: Response): Promise<string> {
   } catch {
     // ignore
   }
-  return `GeoID request failed (${res.status})`
 }
 
 export class GeoidClient {
@@ -49,20 +50,6 @@ export class GeoidClient {
     }))
   }
 
-  async registerFeature(collectionId: string, feature: Record<string, unknown>): Promise<MintResponse> {
-    const res = await fetch(
-      `${this.config.baseUrl}/collections/${encodeURIComponent(collectionId)}/items`,
-      {
-        method: 'POST',
-        cache: 'no-store',
-        headers: this.authHeaders({ 'Content-Type': 'application/json', Accept: 'application/json' }),
-        body: JSON.stringify(feature),
-      },
-    )
-    if (!res.ok) throw new Error(await readErrorMessage(res))
-    return (await res.json()) as MintResponse
-  }
-
   async registerBulk(collectionId: string, featureCollection: Record<string, unknown>): Promise<BulkReport> {
     const res = await fetch(
       `${this.config.baseUrl}/collections/${encodeURIComponent(collectionId)}/items/bulk`,
@@ -77,33 +64,30 @@ export class GeoidClient {
     return (await res.json()) as BulkReport
   }
 
-  async resolveGeoid(geoid: string): Promise<GeoIdFeature> {
-    const res = await fetch(`${this.config.baseUrl}/${encodeURIComponent(geoid)}`, {
+  async resolveBulk(geoIds: string[]): Promise<ResolveResponse> {
+    const res = await fetch(`${this.config.baseUrl}/bulk_resolve`, {
+      method: 'POST',
       cache: 'no-store',
-      headers: { Accept: 'application/geo+json, application/json' },
+      headers: { 'Content-Type': 'application/json', Accept: 'application/geo+json, application/json' },
+      body: JSON.stringify({ geoids: geoIds }),
     })
     if (!res.ok) throw new Error(await readErrorMessage(res))
-    return (await res.json()) as GeoIdFeature
+    return (await res.json()) as ResolveResponse
   }
 
-  async registerGeojson(collectionId: string, geojson: Record<string, unknown>): Promise<string[]> {
+  async registerGeojson(
+    collectionId: string,
+    geojson: Record<string, unknown>,
+  ): Promise<{ features: Feature[]; rejected: BulkRejected[] }> {
     const features = featuresFromGeojson(geojson)
-    if (features.length === 1) {
-      const result = await this.registerFeature(collectionId, features[0])
-      return [result.geoid]
+    const { accepted = [], rejected = [] } = await this.registerBulk(collectionId, { type: 'FeatureCollection', features })
+    if (accepted.length === 0) {
+      throw new Error(rejected[0]?.detail ?? rejected[0]?.reason ?? 'No features were registered.')
     }
-    const report = await this.registerBulk(collectionId, { type: 'FeatureCollection', features })
-    const geoids = (report.accepted ?? []).map((item) => item.geoid)
-    if (geoids.length === 0) {
-      const detail = report.rejected?.[0]?.detail ?? report.rejected?.[0]?.reason
-      throw new Error(detail ?? 'No features were registered.')
+    return {
+      features: accepted.map(({ index, geoid }) => ({ ...features[index], id: geoid }) as unknown as Feature),
+      rejected,
     }
-    return geoids
-  }
-
-  async retrieveFeatureCollection(geoIds: string[]): Promise<Record<string, unknown>> {
-    const features = await Promise.all(geoIds.map((id) => this.resolveGeoid(id)))
-    return { type: 'FeatureCollection', features }
   }
 
   async listMyGeoids(params: { limit?: number; offset?: number } = {}): Promise<PlaceRecord[]> {

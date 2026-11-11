@@ -44,11 +44,16 @@ export function Footer({ apiDocsUrl }: { apiDocsUrl?: string | null }) {
         Terms of Service
       </Link>
       {version && (
-        <>
-          <div className="ml-auto">
-            <span>App v{version}</span>
-          </div>
-        </>
+        <div className="ml-auto">
+          <Link
+            href={`https://github.com/openforis/geoid-ui/releases/tag/v${version}`}
+            variant="muted"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            v{version}
+          </Link>
+        </div>
       )}
     </footer>
   );

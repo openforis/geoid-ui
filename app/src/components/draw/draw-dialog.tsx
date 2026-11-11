@@ -100,7 +100,7 @@ export function DrawDialog({ features, cartoKey, onConfirm, onClose }: DrawDialo
               <span className="truncate text-[12px] text-text-muted">Dashed features are read-only</span>
             )}
           </div>
-          <CloseButton type="button" onClick={requestClose} />
+          <CloseButton onClick={requestClose} />
         </header>
 
         <LocatePanel ready={map !== null} status={locateStatus} onLocate={locate} onGoTo={goTo} />
@@ -126,7 +126,6 @@ export function DrawDialog({ features, cartoKey, onConfirm, onClose }: DrawDialo
             <>
               <div className="draw-crosshair pointer-events-none absolute left-1/2 top-1/2 z-10 size-7 -translate-x-1/2 -translate-y-1/2" />
               <Button
-                type="button"
                 className="absolute bottom-10 left-1/2 z-10 -translate-x-1/2 shadow-xl"
                 onClick={addAtCenter}
                 disabled={!map}

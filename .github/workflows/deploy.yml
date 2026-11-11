@@ -84,7 +84,7 @@ jobs:
               kubectl apply -f "$f"
             done
             if [ "$tier" = "03" ]; then
-              kubectl wait --for=condition=available deployment --all -n "$GKE_NAMESPACE" --timeout=300s
+              kubectl rollout status deployment/geoid-app -n "$GKE_NAMESPACE" --timeout=300s
             fi
           done
 

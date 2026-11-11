@@ -66,7 +66,12 @@ export function ConverterPanel({ className, maxFileSize, mapConfig }: ConverterP
       </TabsContent>
 
       <TabsContent value="geoid-to-geojson" className={cn('min-h-0 flex flex-col', showTabs ? 'mt-4' : undefined)}>
-        <GeoidInput onError={setError} onStepChange={setGeoidStep} maxFileSize={maxFileSize} />
+        <GeoidInput
+          onError={setError}
+          onStepChange={setGeoidStep}
+          maxFileSize={maxFileSize}
+          mapConfig={mapConfig}
+        />
       </TabsContent>
     </Tabs>
   )

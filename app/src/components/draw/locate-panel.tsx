@@ -33,7 +33,7 @@ export function LocatePanel({ ready, status, onLocate, onGoTo }: LocatePanelProp
   return (
     <div className="flex shrink-0 flex-col gap-2 border-b border-border bg-surface px-4 py-2.5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <Button type="button" variant="outline" onClick={onLocate} disabled={!ready || locating} className="w-full sm:w-auto">
+        <Button variant="outline" onClick={onLocate} disabled={!ready || locating} className="w-full sm:w-auto">
           {locating ? <Loader2 className="size-4 animate-spin" /> : <LocateFixed className="size-4" />}
           {locating ? 'Locating…' : 'Locate me'}
         </Button>

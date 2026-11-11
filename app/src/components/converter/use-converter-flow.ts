@@ -1,10 +1,13 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import type { ConverterStep } from '@/types/converter'
+import type { ActionResult } from '@/types/action-result'
+import type { ConverterResult, ConverterStep } from '@/types/converter'
 
-export function useConverterFlow(onStepChange: (step: ConverterStep) => void) {
+export function useConverterFlow(onStepChange: (step: ConverterStep) => void, onError: (message: string) => void) {
   const [step, setStep] = useState<ConverterStep>('input')
+  const [text, setText] = useState('')
+  const [output, setOutput] = useState<ConverterResult | null>(null)
   const flowRef = useRef<HTMLDivElement>(null)
   const scrolledRef = useRef(false)
 
@@ -21,10 +24,29 @@ export function useConverterFlow(onStepChange: (step: ConverterStep) => void) {
     }
   }, [step])
 
-  const resetStep = () => {
+  const changeText = (value: string) => {
+    setText(value)
+    setOutput(null)
     setStep('input')
-    scrolledRef.current = false
   }
 
-  return { step, setStep, flowRef, resetStep }
+  const reset = () => {
+    changeText('')
+    onError('')
+  }
+
+  const run = async (request: () => Promise<ActionResult<ConverterResult>>) => {
+    onError('')
+    setStep('processing')
+    const result = await request().catch(() => null)
+    if (result?.ok) {
+      setOutput(result.data)
+      setStep('result')
+    } else {
+      onError(result?.message ?? 'Something went wrong. Please try again.')
+      setStep('input')
+    }
+  }
+
+  return { step, text, output, flowRef, changeText, reset, run }
 }

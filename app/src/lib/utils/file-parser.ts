@@ -41,5 +41,5 @@ export async function readGeoIdFile(file: File): Promise<FileTextResult> {
   const text = await readTextFile(file)
   if (typeof text !== 'string') return text
   const ids = parseGeoIdText(text)
-  return ids.length > 0 ? ids.join('\n') : { error: 'File contains no valid Geo IDs.' }
+  return ids.length > 0 ? ids.join('\n') : { error: 'File contains no valid GeoIDs.' }
 }

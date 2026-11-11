@@ -5,10 +5,11 @@ import { useState } from 'react'
 import { ConverterActions } from '@/components/converter/converter-actions'
 import { ConverterProgress } from '@/components/converter/converter-progress'
 import { FileTextInput } from '@/components/converter/file-text-input'
-import { RegisterOutput } from '@/components/converter/register-output'
+import { ResultsView } from '@/components/converter/results-view'
 import { useConverterFlow } from '@/components/converter/use-converter-flow'
 import { MapDrawInput } from '@/components/draw/map-draw-input'
 import { parseGeoJsonText, readGeoJsonFile } from '@/lib/utils/file-parser'
+import { downloadBlob, timestampFilename } from '@/lib/utils/download'
 import { registerGeojson } from '@/lib/converter/actions'
 import type { ConverterStep } from '@/types/converter'
 import type { MapConfig } from '@/lib/server/env'
@@ -21,66 +22,43 @@ interface GeojsonInputProps {
 }
 
 export function GeojsonInput({ onError, onStepChange, maxFileSize, mapConfig }: GeojsonInputProps) {
-  const { step, setStep, flowRef, resetStep } = useConverterFlow(onStepChange)
-  const [text, setText] = useState('')
+  const { step, text, output, flowRef, changeText, reset, run } = useConverterFlow(onStepChange, onError)
   //const [collection, setCollection] = useState('')
   const [collection] = useState('public')
-  const [geoids, setGeoids] = useState<string[] | null>(null)
 
-  const reset = () => {
-    resetStep()
-    setText('')
-    setGeoids(null)
-    onError('')
-  }
-
-  const handleTextChange = (value: string) => {
-    setText(value)
-    setGeoids(null)
-    setStep('input')
-  }
-
-  const handleRegister = async () => {
-    onError('')
-    if (!collection) return onError('Please select a collection.')
-    if (!text.trim()) return onError('Please enter GeoJSON or upload a file.')
-
+  const handleRegister = () => {
     const parsed = parseGeoJsonText(text)
     if ('error' in parsed) return onError(parsed.error)
-
-    setGeoids(null)
-    setStep('processing')
-    try {
-      const result = await registerGeojson({ collection, geojson: parsed.geojson })
-      if (!result.ok) {
-        onError(result.message)
-        setStep('input')
-        return
-      }
-      setGeoids(result.data.geoids)
-      setStep('result')
-    } catch {
-      onError('Registration failed.')
-      setStep('input')
-    }
+    run(() => registerGeojson({ collection, geojson: parsed.geojson }))
   }
 
   if (step === 'processing') {
     return (
       <div ref={flowRef} className="flex flex-1 flex-col justify-center gap-4">
         <ConverterProgress
-          status="processing"
           title="Registering GeoJSON"
-          description="Assigning Geo IDs in the selected collection."
+          description="Assigning a GeoID to each feature."
         />
       </div>
     )
   }
 
-  if (step === 'result' && geoids?.length) {
+  if (step === 'result' && output) {
+    const geoids = output.geojson.features.map((feature) => String(feature.id)).join('\n')
     return (
       <div ref={flowRef} className="flex min-h-0 flex-1 flex-col animate-in fade-in duration-300">
-        <RegisterOutput geoids={geoids} collection={collection} onStartOver={reset} />
+        <ResultsView
+          successLabel="registered"
+          failedLabel="rejected"
+          result={output}
+          mapConfig={mapConfig}
+          onStartOver={reset}
+          onDownload={() =>
+            downloadBlob(new Blob([geoids], { type: 'text/plain;charset=utf-8' }), timestampFilename('txt', 'geoids'))
+          }
+          downloadLabel="Download .txt"
+          copyText={geoids}
+        />
       </div>
     )
   }
@@ -93,17 +71,16 @@ export function GeojsonInput({ onError, onStepChange, maxFileSize, mapConfig }: 
         formats=".json · .geojson"
         placeholder={'Paste GeoJSON\n\n{\n  "type": "FeatureCollection",\n  "features": []\n}'}
         value={text}
-        onChange={handleTextChange}
+        onChange={changeText}
         readFile={readGeoJsonFile}
         maxFileSize={maxFileSize}
         onError={onError}
       >
-        <MapDrawInput value={text} onChange={handleTextChange} mapConfig={mapConfig} />
+        <MapDrawInput value={text} onChange={changeText} mapConfig={mapConfig} />
       </FileTextInput>
       <ConverterActions
         actionLabel="Register"
         disabled={!text.trim() || !collection}
-        isLoading={false}
         onAction={handleRegister}
         onClear={reset}
       />

@@ -67,7 +67,6 @@ export function DrawActions({
 
         {drawing && (
           <Button
-            type="button"
             variant="outline"
             size="sm"
             aria-pressed={crosshair}
@@ -80,29 +79,29 @@ export function DrawActions({
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center [&>*]:w-full sm:[&>*]:w-auto sm:[&>*:last-child]:flex-auto">
-        <Button type="button" variant="outline" onClick={() => onDrawingChange(!drawing)} disabled={!ready}>
+        <Button variant="outline" onClick={() => onDrawingChange(!drawing)} disabled={!ready}>
           {drawing ? <Hand className="size-3.5" /> : <PencilLine className="size-3.5" />}
           {drawing ? 'Stop drawing' : 'Start drawing'}
         </Button>
 
         <div className="flex gap-2 max-sm:[&>*]:flex-1">
-          <Button type="button" variant="outline" onClick={onAddShape} disabled={count === 0 || issue !== null}>
+          <Button variant="outline" onClick={onAddShape} disabled={count === 0 || issue !== null}>
             <Plus className="size-3.5" />
             New shape
           </Button>
 
-          <Button type="button" variant="outline" onClick={onUndo} disabled={!canUndo}>
+          <Button variant="outline" onClick={onUndo} disabled={!canUndo}>
             <Undo2 className="size-3.5" />
             Undo
           </Button>
 
-          <Button type="button" variant="outline" onClick={onDelete} disabled={count === 0}>
+          <Button variant="outline" onClick={onDelete} disabled={count === 0}>
             <Trash2 className="size-3.5" />
             Delete
           </Button>
         </div>
 
-        <Button type="button" onClick={onUse} disabled={!canUse}>
+        <Button onClick={onUse} disabled={!canUse}>
           <Check className="size-4" />
           Use shapes
         </Button>

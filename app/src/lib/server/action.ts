@@ -1,6 +1,8 @@
 import 'server-only'
 import type { ActionResult } from '@/types/action-result'
 
+const UNAVAILABLE = 'The GeoID service is unavailable. Please try again later.'
+
 function isNextSentinel(err: unknown): boolean {
   const digest = (err as { digest?: unknown } | null)?.digest
   return typeof digest === 'string'
@@ -15,9 +17,9 @@ export function action<TArgs extends unknown[], T>(
       return { ok: true, data: await fn(...args) }
     } catch (err) {
       if (isNextSentinel(err)) throw err
-      const e = err as Error
-      console.error('[action]', e?.message ?? String(err), e?.stack)
-      return { ok: false, message: e?.message ?? 'Request failed.' }
+      console.error('[action]', err)
+      const message = (err as Error)?.message
+      return { ok: false, message: message && message !== 'fetch failed' ? message : UNAVAILABLE }
     }
   }
 }
